@@ -1,3 +1,6 @@
 {
-"path_to_wdb": "./WORLD.WDB"
+"path_to_wdb": "./WORLD.WDB",
+"obj_path": "./ripped/obj/",
+"group_path": "./ripped/groups/",
+"image_path": "./ripped/images/",
 }

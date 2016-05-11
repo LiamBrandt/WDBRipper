@@ -1,6 +1,6 @@
 //Lego Island WORLD.WDB file format
 
-==HEADER==
+//===HEADER===
 int numberOfGroups
 
 #SECTION[numberOfGroups] Group
@@ -20,7 +20,7 @@ int numberOfGroups
 				char[sizeOfString] presenterTitle
 				byte[37] UNKNOWN
 			
-==DATA==
+//===DATA===
 //SUBGROUPS
 int magicNumber
 int bytesLeftInSubgroup
@@ -28,16 +28,30 @@ int version
 int UNKNOWN
 int UNKNOWN
 int sizeOfString
-char[sizeOfString] subGroupName
-byte[12] UNKNOWN
+char[sizeOfString] fileName
+byte[8] UNKNOWN
+int numberOfComponents
+#SECTION[numberOfComponents] ComponentHeader
+	int sizeOfString
+	char[sizeOfString] componentName
+	short numCoordinates
+	#SECTION[numCoordinates] CoordinateThing
+		short UNKNOWN
+		short UNKNOWN
+		float UNKNOWN
+		float UNKNOWN
+		float UNKNOWN
+		byte[10] UNKNOWN
+
 int sizeOfString
-char[sizeOfString] subGroupName2
+char[sizeOfString] subGroupName
 byte[45] UNKNOWN
 int numberOfModels
-int UNKNOWN
+int textureStartOffset
 #SECTION[numberOfModels] Model
 	int UNKNOWN
-	int numberOfParts
+	short numberOfParts
+	short UNKNOWN
 	short numberOfVerts
 	short numberOfNormals
 	short numberOfCoordinates

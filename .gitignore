@@ -2,3 +2,6 @@
 *.png
 *.obj
 *.mtl
+bin_decode2
+versions
+wdb_file_versions
