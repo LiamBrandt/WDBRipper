@@ -19,9 +19,27 @@ int numberOfGroups
 				int sizeOfString
 				char[sizeOfString] presenterTitle
 				byte[37] UNKNOWN
-			
-//===DATA===
-//SUBGROUPS
+int numImages
+
+#SECTION[numImages] Image
+  int sizeOfString
+    char[sizeOfString] gifName
+    int width
+    int height
+    int numColors
+    
+    #SECTION[numColors] Color
+      byte[1] red
+      byte[1] green
+      byte[1] blue
+      
+    #SECTION[height] Row
+      #SECTION[width] Pixel
+        //the color index at this pixel is an index to the colors defined in the previous section.
+        byte[1] colorIndex
+      
+      
+//===SUBGROUPS===
 int magicNumber
 int bytesLeftInSubgroup
 int version
@@ -31,10 +49,12 @@ int sizeOfString
 char[sizeOfString] fileName
 byte[8] UNKNOWN
 int numberOfComponents
+
 #SECTION[numberOfComponents] ComponentHeader
 	int sizeOfString
 	char[sizeOfString] componentName
 	short numCoordinates
+  
 	#SECTION[numCoordinates] CoordinateThing
 		short UNKNOWN
 		short UNKNOWN
@@ -48,6 +68,7 @@ char[sizeOfString] subGroupName
 byte[45] UNKNOWN
 int numberOfModels
 int textureStartOffset
+
 #SECTION[numberOfModels] Model
 	int UNKNOWN
 	short numberOfParts
@@ -56,21 +77,27 @@ int textureStartOffset
 	short numberOfNormals
 	short numberOfCoordinates
 	short UNKNOWN
+  
 	#SECTION[numberOfVerts] Vertice
 		float x
 		float y
 		float z
+    
 	#SECTION[numberOfNormals / 2] Normal
 		float x
 		float y
 		float z
+    
 	#SECTION[numberOfCoordinates] Coordinate
 		float u
 		float v
+    
 	#SECTION[numberOfParts] Part
 		short numTris
 		short numIndexDefinitions
+    
 		#SECTION[numTris] Indice
+    
 			#SECTION[3] Axis
 				unsigned short first
 				unsigned short second
@@ -83,7 +110,9 @@ int textureStartOffset
 				//definition. second is the same as first, except instead of being an index to
 				//Vertices it is an index to Normals previously defined.
 		int numCoordinateIndexes
+    
 		#SECTION[numCoordinateIndexes / 3] CoordinateIndex
+    
 			#SECTION[3] Axis
 				int coordinateIndex
 				//this needs to reference the Indice components from before. Since every Indice
@@ -104,20 +133,25 @@ int textureStartOffset
 		int sizeOfString
 		char[sizeOfString] materialName
 		
+//GIF IMAGES
 int UNKNOWN
 int numImages
 int UNKNOWN
+
 #SECTION[numImages] Image
 	int sizeOfString
 	char[sizeOfString] gifName
 	int width
 	int height
 	int numColors
+  
 	#SECTION[numColors] Color
 		byte[1] red
 		byte[1] green
 		byte[1] blue
+    
 	#SECTION[height] Row
+  
 		#SECTION[width] Pixel
 			//the color index at this pixel is an index to the colors defined in the previous section.
 			byte[1] colorIndex
