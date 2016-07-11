@@ -2,6 +2,7 @@
 *.png
 *.obj
 *.mtl
-converted
-ripped
-archive
+*.pyc
+bin
+obj
+gif
