@@ -92,21 +92,33 @@ number_of_components I
 CHUNK component_header number_of_components
   size_of_string I
   component_name s size_of_string
-  num_coordinates H
 
-  CHUNK coodinate_things num_coordinates
+  CHUNK coordinate_things 99
+    num_coordinates H
+
+    IF num_coordinates 0
+      SKIP 8
+      GOTO ENDCOORDINATETHINGS
+    ENDIF
+
     unknown1 H
     unknown2 H
-    unknown3 f
-    unknown4 f
-    unknown5 f
-    SKIP 10
+
+    CHUNK floating_nums INDEX:coordinate_things+3
+      unknownfloat f
+    END
+  END
+  MARKER ENDCOORDINATETHINGS
   END
 END
+MARKER ENDCOMPHEADER
+#temporary return for debugging
+#RETURN
+KILL
 
-IF number_of_components 0
-  GOTO NOANIMATIONS
-ENDIF
+#IF number_of_components 0
+#  GOTO NOANIMATIONS
+#ENDIF
 
 size_of_string I
 sub_group_name s size_of_string
@@ -217,7 +229,15 @@ END
 RETURN
 
 
-MARKER NOANIMATIONS
+@model-noanims
+magic_number I
+bytes_left_in_subgroup I
+version I
+SKIP 8
+size_of_file_name I
+file_name s size_of_file_name
+SKIP 8
+number_of_components I
 #COMPONENT
 CHUNK components 1
   size_of_string I

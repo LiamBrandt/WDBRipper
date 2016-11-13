@@ -18,6 +18,8 @@ SETTINGS = {
     "filename": raw_input("FILE: "),
     "format": raw_input("FORMAT: "),
     "pattern": raw_input("PATTERN: "),
+
+    "ignore_pattern": False,
 }
 pygame.display.set_caption(SETTINGS["filename"])
 
@@ -205,6 +207,11 @@ class Group(object):
             "f": 4,
         }
         if self.data_string[0] == "s":
+            # If the length happens to have been loaded as an error in the form,
+            # make sure that something useable is returned for length.
+            if self.data_string[1:] == "ERROR":
+                return 0
+                
             return int(self.data_string[1:])
         else:
             return int(lengths[self.data_string[0].lower()])
@@ -239,6 +246,8 @@ class Group(object):
             if text.get_width() > self.width and self.data_string == "f":
                 self.value = "%.2E" % float(self.value)
                 text = main_font.render(self.value, True, (255, 255, 255))
+            if text.get_width() > self.width:
+                text = pygame.transform.scale(text, (self.width, int(text.get_height() * (float(self.width)/float(text.get_width())))))
 
             screen.blit(text, [draw_x+(self.width/2)-text.get_width()/2, draw_y+(self.height/2)-text.get_height()/2])
         except:
@@ -316,19 +325,20 @@ def main():
     overlay = Overlay()
 
     bin_file.seek(0)
-    data = get_formatted_data(bin_file, SETTINGS["format"], SETTINGS["pattern"])
+    if SETTINGS["ignore_pattern"] == False:
+        data = get_formatted_data(bin_file, SETTINGS["format"], SETTINGS["pattern"])
 
-    #tuple_data is (key, (data_string, offset))
-    nested_values = sorted(get_nested_values(data), key=lambda x: x[1][1])
-    nested_index = 0
+        #tuple_data is (key, (data_string, offset))
+        nested_values = sorted(get_nested_values(data), key=lambda x: x[1][1])
+        nested_index = 0
 
-    for tuple_data in nested_values:
-        key = tuple_data[0]
-        data_string = tuple_data[1][0]
-        offset = tuple_data[1][1]
+        for tuple_data in nested_values:
+            key = tuple_data[0]
+            data_string = tuple_data[1][0]
+            offset = tuple_data[1][1]
 
-        new_group = Group(key, data_string, offset, bin_file)
-        editor.groups.append(new_group)
+            new_group = Group(key, data_string, offset, bin_file)
+            editor.groups.append(new_group)
 
     selected_data = None
     while(True):
@@ -354,6 +364,12 @@ def main():
                     for each_group in editor.groups:
                         if each_group.offset == selected_data.offset:
                             editor.groups.remove(each_group)
+
+                if event.key == pygame.K_g:
+                    offset = get_num()
+                    INFO["y_offset"] = -int(offset/SETTINGS["cells_per_row"])
+                    editor.update_rects()
+                    editor.populate()
 
                 if event.key == pygame.K_SPACE:
                     if nested_index < len(nested_values)-1:
