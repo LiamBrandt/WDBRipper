@@ -4,11 +4,7 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  - sudo apt-get install libsdl2-dev
-  - hg clone https://bitbucket.org/pygame/pygame
-  - cd pygame
-  - python setup.py build
-  - sudo python setup.py install
+  - pip install hg+http://bitbucket.org/pygame/pygame
 
 # command to run tests
 script: wdb_ripper
