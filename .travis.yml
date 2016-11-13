@@ -3,6 +3,11 @@ python:
   - "2.6"
   - "2.7"
 # command to install dependencies
-install: "pip install pygame"
+install:
+  - hg clone https://bitbucket.org/pygame/pygame
+  - cd pygame
+  - python setup.py build
+  - sudo python setup.py install
+
 # command to run tests
 script: wdb_ripper
