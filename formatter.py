@@ -33,8 +33,13 @@ MARKERS = {}
 ABORT = False
 
 def trace(text):
-    #pass
-    print(text)
+    pass
+    #print(text)
+
+def trace_error():
+    pass
+    #traceback.print_exc()
+    #time.sleep(1)
 
 def shorten_text(text, length):
     if len(text) <= length:
@@ -64,6 +69,15 @@ def chunk_trace(text, layer):
 
 #makes unpacking binary values easier
 def unpack(bin_file, data_type, length_arg=0):
+    global ABORT
+    current_offset = bin_file.tell()
+    bin_file.seek(0, 2)
+    if current_offset == bin_file.tell():
+        #trying to read bytes that dont exist, we are at end of file!
+        ABORT = True
+        return ["EOF"]
+    bin_file.seek(current_offset)
+
     #integer or unsigned integer
     if data_type == "i" or data_type == "I":
         return int(struct.unpack(data_type, bin_file.read(4))[0])
@@ -121,10 +135,10 @@ def get_dynamic_number(var, chunk, bin_file):
             #all math symbols have been evaluated, now evaluate variable values
             if var == "INDEX":
                 number = chunk[var]
-                print("FOUND 'INDEX' of " + str(number))
+                trace("FOUND 'INDEX' of " + str(number))
             elif "INDEX:" in var:
                 number = INDICES[var.split(":")[1]]
-                print("FOUND 'INDEX:' of " + str(number))
+                trace("FOUND 'INDEX:' of " + str(number))
             else:
                 number = get_raw(chunk[var], bin_file, tracer="get_dynamic_number")
 
@@ -141,13 +155,17 @@ def interpret_chunk(format_file, bin_file, layer):
     nested_ifs = 0
 
     chunk = {}
+    flags = {
+        "return": False,
+    }
 
     try:
         #read lines in this chunk
         while(True):
             if ABORT:
                 chunk_trace(">>>END CHUNK by error: ABORT>>>", layer)
-                return chunk
+                flags["return"] = True
+                return chunk, flags
 
             line = format_file.readline().lstrip()
 
@@ -195,10 +213,16 @@ def interpret_chunk(format_file, bin_file, layer):
                 continue
 
             #exit, the chunk is done being read
-            if line_list[0] == "END" or line_list[0] == "RETURN":
+            if line_list[0] == "END":
                 chunk_trace("END", layer)
                 chunk_trace(">>>END CHUNK>>>", layer)
-                return chunk
+                return chunk, flags
+
+            if line_list[0] == "RETURN":
+                chunk_trace("RETURN", layer)
+                chunk_trace(">>>END CHUNK by return>>>", layer)
+                flags["return"] = True
+                return chunk, flags
 
             #GOTO a MARKER
             if line_list[0] == "GOTO":
@@ -225,7 +249,7 @@ def interpret_chunk(format_file, bin_file, layer):
                 try:
                     num_chunks = get_dynamic_number(line_list[2], VARS, bin_file)
                 except:
-                    traceback.print_exc()
+                    trace_error()
                 trace("num_chunks: " + str(num_chunks))
 
                 #skip to the end of this format chunk if there are no chunks to be read
@@ -247,17 +271,22 @@ def interpret_chunk(format_file, bin_file, layer):
                     #Set the index with this chunk name to be the index we are on in the loop.
                     #This is used for IF statements that need to know what the chunk INDEX is.
                     INDICES[line_list[1]] = chunk_index
-                    print("INDICIES --- " + str(INDICES))
+                    trace("INDICIES --- " + str(INDICES))
                     VARS["INDEX"] = chunk_index
                     #go back to beggining of chunk format instructions for every chunk we read
                     format_file.seek(format_reference_offset)
-                    print("seeking to: " + str(format_reference_offset))
+                    trace("seeking to: " + str(format_reference_offset))
                     chunk_trace("***" + line_list[1] + "*** INDEX: " + str(INDICES[line_list[1]]) + "/" + str(num_chunks), layer)
-                    new_chunk = interpret_chunk(format_file, bin_file, line_list[1])
+                    new_chunk, new_flags = interpret_chunk(format_file, bin_file, line_list[1])
                     #add new child chunks to this parent chunk
                     chunk[line_list[1]].append(new_chunk)
-                    print("chunk returned, chunk_index: " + str(chunk_index))
-                print("end of all chunks: ")
+
+                    if new_flags["return"]:
+                        trace("chunk RETURNed, chunk_index: " + str(chunk_index))
+                        break
+
+                    trace("chunk ENDed, chunk_index: " + str(chunk_index))
+                trace("end of all chunks: ")
                 continue
 
             #SKIP bytes
@@ -285,16 +314,17 @@ def interpret_chunk(format_file, bin_file, layer):
             data = get_raw(bin_list, bin_file, False, tracer="interpret_chunk")
             if data == "ERROR":
                 chunk_trace(">>>END CHUNK by error: data is 'ERROR'>>>", layer)
-                return chunk
+                flags["return"] = True
+                return chunk, flags
 
             cons.set_text_attr(cons.FOREGROUND_YELLOW | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
             chunk_trace("(DATA): " + str(data) + ", FORM: " + str(bin_list[0]) + ", OFF: " + str(bin_list[1]), layer)
             cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
     except:
-        traceback.print_exc()
-        print("ERR line_list: " + str(line_list))
+        trace_error()
         chunk_trace(">>>END CHUNK by error: exception in interpret_chunk()>>>", layer)
-        return chunk
+        flags["return"] = True
+        return chunk, flags
 
 def get_raw(bin_list, bin_file, return_to_pos=True, tracer=None):
     if tracer != None:
@@ -313,10 +343,16 @@ def get_raw(bin_list, bin_file, return_to_pos=True, tracer=None):
         else:
             raw = unpack(bin_file, form[:1])
     except:
-        #print("get_raw() returned ERROR!")
-        traceback.print_exc()
+        trace("get_raw() returned ERROR!")
+        trace_error()
         raw = "ERROR"
         ABORT = True
+
+    #hit end of file
+    if type(raw) == type([]):
+        if raw[0] == "EOF":
+            raw = "ERROR"
+            ABORT = True
 
     if return_to_pos:
         bin_file.seek(old_offset)
@@ -325,6 +361,8 @@ def get_raw(bin_list, bin_file, return_to_pos=True, tracer=None):
 
 def get_formatted_data(bin_file, format_name, pattern_name):
     global MARKERS
+    global ABORT
+    ABORT = False
 
     format_file = open("./formats/" + format_name, "r")
 
@@ -357,6 +395,6 @@ def get_formatted_data(bin_file, format_name, pattern_name):
             if pattern_name in line:
                 break
 
-    data = interpret_chunk(format_file, bin_file, "GLOBAL")
+    data, flags = interpret_chunk(format_file, bin_file, "GLOBAL")
 
     return data

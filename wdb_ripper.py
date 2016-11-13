@@ -254,8 +254,6 @@ def extract_gif_chunk():
 # and call extract_pattern() on each of them. It will try to extract using the
 # pattern with no animations, and then with animations.
 def extract_models():
-    global MATERIALS
-    import pygame
     import os
 
     #find all files in the groups folder that end in .bin
@@ -268,7 +266,7 @@ def extract_models():
     files_extracted = 0
 
     #overwrite bin_files for testing extraction of one particular file
-    #bin_files = ["./bin/ACT1/sub1/ambul.bin"]
+    #bin_files = ["./bin/ACT1/sub1/2x4blu.bin"]
 
     #go through all bin files with extract_pattern() using two different patterns, using whichever one works
     for file_path in bin_files:
@@ -293,6 +291,8 @@ def extract_models():
 # from vertex, normal and coordinate data, gif images from textures, and a
 # mdl file to connect the textures with the models.
 def extract_pattern(file_path, pattern):
+    global MATERIALS
+    import pygame
     bin_file = open(file_path, "rb")
 
     #reset materials to empty
@@ -303,6 +303,7 @@ def extract_pattern(file_path, pattern):
     #INTERPRET FORMAT FROM FILE
     try:
         data = get_formatted_data(bin_file, "wdb", pattern)
+        #trace(str(data))
         progress[0] = "_"
     except:
         traceback.print_exc()

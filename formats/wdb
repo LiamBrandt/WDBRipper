@@ -93,11 +93,12 @@ CHUNK component_header number_of_components
   size_of_string I
   component_name s size_of_string
 
-  CHUNK coordinate_things 99
+  CHUNK coordinate_things 5
     num_coordinates H
 
     IF num_coordinates 0
-      SKIP 8
+      SKIP 10-(INDEX*2)
+      RETURN
       GOTO ENDCOORDINATETHINGS
     ENDIF
 
@@ -109,12 +110,10 @@ CHUNK component_header number_of_components
     END
   END
   MARKER ENDCOORDINATETHINGS
-  END
 END
 MARKER ENDCOMPHEADER
 #temporary return for debugging
 #RETURN
-KILL
 
 #IF number_of_components 0
 #  GOTO NOANIMATIONS
