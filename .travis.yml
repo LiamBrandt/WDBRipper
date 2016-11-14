@@ -4,7 +4,7 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  - sed -i '$ a\deb http://ftp.debian.org/debian wheezy-backports main' /etc/apt/sources.list.d/
+  - sed -i '$ a\deb http://ftp.debian.org/debian wheezy-backports main' /etc/apt/sources.list/
   - apt-get -t wheezy-backports install libsdl2-dev
   - pip install hg+http://bitbucket.org/pygame/pygame
 
