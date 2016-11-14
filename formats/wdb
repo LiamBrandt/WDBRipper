@@ -77,7 +77,6 @@ RETURN
 
 
 
-
 @model
 magic_number I
 bytes_left_in_subgroup I
@@ -85,10 +84,32 @@ version I
 SKIP 8
 size_of_file_name I
 file_name s size_of_file_name
-SKIP 8
+
+u1 I
+
+CHUNK unknowns1 u1
+  some_float1 f
+  some_float2 f
+  some_float3 f
+  some_float4 f
+END
+
+u2 I
+
+CHUNK unknowns2 u2
+  some_int1 I
+  some_int2 I
+  some_int3 I
+  some_int4 I
+END
+
 number_of_components I
 
-#COMPONENT HEADER
+#IF number_of_components 0
+#  GOTO NOANIMATIONS
+#ENDIF
+
+MARKER ANIMATIONS
 CHUNK component_header number_of_components
   size_of_string I
   component_name s size_of_string
@@ -112,12 +133,11 @@ CHUNK component_header number_of_components
   MARKER ENDCOORDINATETHINGS
 END
 MARKER ENDCOMPHEADER
-#temporary return for debugging
-#RETURN
 
-#IF number_of_components 0
-#  GOTO NOANIMATIONS
-#ENDIF
+IF number_of_components 0
+  CHUNK components 1
+  GOTO STARTCOMPS
+ENDIF
 
 size_of_string I
 sub_group_name s size_of_string
@@ -131,6 +151,7 @@ number_of_components2 I
 
 #COMPONENT
 CHUNK components number_of_components2
+  MARKER STARTCOMPS
   size_of_string I
   component_name s size_of_string
 
@@ -226,86 +247,3 @@ END
 
 
 RETURN
-
-
-@model-noanims
-magic_number I
-bytes_left_in_subgroup I
-version I
-SKIP 8
-size_of_file_name I
-file_name s size_of_file_name
-SKIP 8
-number_of_components I
-#COMPONENT
-CHUNK components 1
-  size_of_string I
-  component_name s size_of_string
-
-  CHUNK random_floats2 10
-    random_float2 f
-  END
-
-  SKIP 5
-  #number of lod models in this component
-  number_of_models I
-  end_component_offset I
-
-  CHUNK models number_of_models
-    SKIP 4
-    number_of_parts H
-    SKIP 2
-    number_of_verts H
-    number_of_normals H
-    number_of_coordinates H
-    SKIP 2
-
-    CHUNK vertices number_of_verts
-      x f
-      y f
-      z f
-    END
-
-    CHUNK normals number_of_normals/2
-      x f
-      y f
-      z f
-    END
-
-    CHUNK coordinates number_of_coordinates
-      u f
-      v f
-    END
-
-    CHUNK parts number_of_parts
-      num_tris H
-      num_index_definitions H
-
-      CHUNK indices num_tris
-        CHUNK axis 3
-          first H
-          second H
-        END
-      END
-
-      num_coordinate_indices I
-
-      CHUNK coordinate_indices num_coordinate_indices/3
-        CHUNK axis 3
-          coordinate_index I
-        END
-      END
-
-      part_color_red B
-      part_color_green B
-      part_color_blue B
-      SKIP 8
-      size_of_texture_name I
-      texture_name s size_of_texture_name
-      size_of_material_name I
-      material_name s size_of_material_name
-    END
-  END
-  SKIP 4
-END
-GOTO MODELGIFS

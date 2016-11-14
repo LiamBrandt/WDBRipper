@@ -270,11 +270,11 @@ def extract_models():
 
     #go through all bin files with extract_pattern() using two different patterns, using whichever one works
     for file_path in bin_files:
-        used_pattern = "model-noanims"
+        used_pattern = "model"
         progress = extract_pattern(file_path, used_pattern)
-        if "X" in progress:
-            used_pattern = "model"
-            progress = extract_pattern(file_path, used_pattern)
+        #if "X" in progress:
+        #    used_pattern = "model"
+        #    progress = extract_pattern(file_path, used_pattern)
 
         #display the name and progress for this file
         trace(file_path.ljust(40) + str(progress) + " " + used_pattern)
