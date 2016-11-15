@@ -266,7 +266,7 @@ def extract_models():
     files_extracted = 0
 
     #overwrite bin_files for testing extraction of one particular file
-    #bin_files = ["./bin/ACT1/sub1/2x4blu.bin"]
+    #bin_files = ["./bin/ACT1/sub1/carcomp.bin"]
 
     #go through all bin files with extract_pattern() using two different patterns, using whichever one works
     for file_path in bin_files:
@@ -316,13 +316,17 @@ def extract_pattern(file_path, pattern):
         #trace(data)
         for component in data["components"]:
             component_name = get_raw(component["component_name"], bin_file)
-            model_index = len(component["models"])
-            for model in component["models"]:
-                model_index -= 1
-                file_path = file_path.replace("\\", "/")
-                obj_path = create_dir("./obj" + file_path[file_path.find("/", 3):file_path.rfind("/")] + "/" + file_name + "/")
-                #trace(obj_path)
-                export_obj(data, model, bin_file, obj_path + component_name + str(model_index))
+            if "models" in component:
+                model_index = len(component["models"])
+                for model in component["models"]:
+                    model_index -= 1
+                    file_path = file_path.replace("\\", "/")
+                    obj_path = create_dir("./obj" + file_path[file_path.find("/", 3):file_path.rfind("/")] + "/" + file_name + "/")
+                    #trace(obj_path)
+                    export_obj(data, model, bin_file, obj_path + component_name + str(model_index))
+            else:
+                #no models in this component, only the component header
+                pass
         progress[1] = "_"
     except:
         traceback.print_exc()

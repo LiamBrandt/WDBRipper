@@ -105,11 +105,6 @@ END
 
 number_of_components I
 
-#IF number_of_components 0
-#  GOTO NOANIMATIONS
-#ENDIF
-
-MARKER ANIMATIONS
 CHUNK component_header number_of_components
   size_of_string I
   component_name s size_of_string
@@ -132,26 +127,11 @@ CHUNK component_header number_of_components
   END
   MARKER ENDCOORDINATETHINGS
 END
-MARKER ENDCOMPHEADER
 
-IF number_of_components 0
-  CHUNK components 1
-  GOTO STARTCOMPS
-ENDIF
-
-size_of_string I
-sub_group_name s size_of_string
-
-CHUNK random_floats 10
-  random_float1 f
-END
-
-SKIP 9
-number_of_components2 I
 
 #COMPONENT
-CHUNK components number_of_components2
-  MARKER STARTCOMPS
+CHUNK components number_of_components+1
+  MARKER STARTCOMP
   size_of_string I
   component_name s size_of_string
 
@@ -159,11 +139,24 @@ CHUNK components number_of_components2
     random_float2 f
   END
 
-  SKIP 5
+  SKIP 4
+  defined_elsewhere B
+  IF defined_elsewhere 1
+    SKIP 4
+    GOTO ENDCOMP
+  ENDIF
+
   #number of lod models in this component
   number_of_models I
-  end_component_offset I
 
+  IF number_of_models 0
+    GOTO SKIPCOMPOFFSET
+  ENDIF
+
+  end_component_offset I
+  MARKER SKIPCOMPOFFSET
+
+  #this means lod, all models in a chunk are the same, just different poly
   CHUNK models number_of_models
     SKIP 4
     number_of_parts H
@@ -220,9 +213,10 @@ CHUNK components number_of_components2
     END
   END
   SKIP 4
+  MARKER ENDCOMP
 END
 
-MARKER MODELGIFS
+#MARKER MODELGIFS
 num_images I
 SKIP 4
 CHUNK images num_images
