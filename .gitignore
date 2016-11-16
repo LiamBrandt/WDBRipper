@@ -2,3 +2,10 @@
 *.png
 *.obj
 *.mtl
+*.pyc
+bin
+obj
+gif
+*.bat
+build
+dist

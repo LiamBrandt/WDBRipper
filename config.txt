@@ -1,3 +1,16 @@
 {
-"path_to_wdb": "./WORLD.WDB"
+    "bin_path": "./bin/",
+    "gif_path": "./gif/",
+    "obj_path": "./obj/",
+
+    "extract_wdb": True,
+    "extract_obj": True,
+
+    "verbose": True,
+    "write_log": True,
+
+    "profile": False,
+
+    "override": False,
+    "override_path": "./bin/ACT1/sub1/isle.bin",
 }
