@@ -6,3 +6,6 @@
 bin
 obj
 gif
+*.bat
+build
+dist

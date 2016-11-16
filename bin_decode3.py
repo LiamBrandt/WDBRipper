@@ -206,15 +206,20 @@ class Group(object):
             "b": 1,
             "f": 4,
         }
-        if self.data_string[0] == "s":
+        first_char = self.data_string[0].lower()
+        if first_char == "s":
             # If the length happens to have been loaded as an error in the form,
             # make sure that something useable is returned for length.
-            if self.data_string[1:] == "ERROR":
+            try:
+                return int(self.data_string[1:])
+            except:
                 return 0
-                
-            return int(self.data_string[1:])
+
+        # Make sure the form is in the dictionary before getting the length
+        elif first_char in lengths:
+            return int(lengths[first_char])
         else:
-            return int(lengths[self.data_string[0].lower()])
+            return 0
 
     def draw(self, force_pos=None):
         try:

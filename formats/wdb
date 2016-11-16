@@ -107,25 +107,31 @@ number_of_components I
 
 CHUNK component_header number_of_components
   size_of_string I
-  component_name s size_of_string
+  component_header_name s size_of_string
 
-  CHUNK coordinate_things 5
-    num_coordinates H
-
-    IF num_coordinates 0
-      SKIP 10-(INDEX*2)
-      RETURN
-      GOTO ENDCOORDINATETHINGS
-    ENDIF
-
+  num_things H
+  CHUNK things num_things
     unknown1 H
     unknown2 H
-
-    CHUNK floating_nums INDEX:coordinate_things+3
-      unknownfloat f
-    END
+    ufloat1 f
+    ufloat2 f
+    ufloat3 f
   END
-  MARKER ENDCOORDINATETHINGS
+
+  num_things2 H
+  CHUNK things2 num_things2
+    unknown1 H
+    unknown2 H
+    ufloat1 f
+    ufloat2 f
+    ufloat3 f
+    ufloat4 f
+  END
+
+  num_things3 H
+  num_things4 H
+
+  some_int I
 END
 
 
@@ -221,7 +227,12 @@ num_images I
 SKIP 4
 CHUNK images num_images
   size_of_string I
+  #store gif_char for later use, then go back and read entire gif_name
+  gif_char B
+  SEEKREL -1
   gif_name s size_of_string
+
+  MARKER RAWGIF
   width I
   height I
   num_colors I
@@ -237,7 +248,25 @@ CHUNK images num_images
       color_index B
     END
   END
+  #for special textures beggining with "^"
+  IF gif_char 94
+    CHUNK extra_images 1
+      width I
+      height I
+      num_colors I
+
+      CHUNK colors num_colors
+        r B
+        g B
+        b B
+      END
+
+      CHUNK rows height
+        CHUNK pixels width
+          color_index B
+        END
+      END
+    END
+  ENDIF
 END
-
-
 RETURN

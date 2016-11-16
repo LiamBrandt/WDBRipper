@@ -1,31 +1,38 @@
-import sys
 import traceback
+import cProfile
+import os
+import png
 
 from formatter import get_formatted_data
 from formatter import get_raw
 
-SETTINGS = {
-    "bin_path": "./bin/",
-    "gif_path": "./gif/",
-    "model_path": "./models/",
-}
+SETTINGS = {}
+
+with open('config.txt','r') as inf:
+    SETTINGS = eval(inf.read())
 
 # MATERIALS stores all the materials for the bin file being extracted. This
 # is reset to an empty dictionary every time a new bin file is extracted.
 MATERIALS = {}
 
-log = open("lastlog.txt", "w")
-log.truncate()
-log.close()
-def trace(text):
-    print(text)
-    log = open("lastlog.txt", "a")
-    log.write(text + "\n")
+if SETTINGS["write_log"]:
+    log = open("lastlog.txt", "w")
+    log.truncate()
     log.close()
+def trace(text):
+    if SETTINGS["verbose"]:
+        print(text)
+        if SETTINGS["write_log"]:
+            log = open("lastlog.txt", "a")
+            log.write(text + "\n")
+            log.close()
+
+def trace_error():
+    if SETTINGS["verbose"]:
+        traceback.print_exc()
 
 # Creates a folder and returns the path to it.
 def create_dir(path):
-    import os
     if not os.path.exists(path):
         os.makedirs(path)
     return path
@@ -62,7 +69,6 @@ def export_obj(data, model, bin_file, filename):
 
         if len(part["coordinate_indices"]) > 0 and len(part["coordinate_indices"]) != len(part["indices"]):
             trace("888888888888888888888888888888888888 woW Weird error")
-            sys.exit(0)
 
         for index in range(len(part["indices"])):
             vert_indices = []
@@ -170,8 +176,6 @@ def export_mtl(data, path, bin_file):
 # Create a gif image based on image, a dictionary whose structure is given
 # by the wdb format file. The image is saved to path.
 def export_gif(image, path, bin_file):
-    import pygame
-
     gif_name = get_raw(image["gif_name"], bin_file)
     width = get_raw(image["width"], bin_file)
     height = get_raw(image["height"], bin_file)
@@ -186,19 +190,26 @@ def export_gif(image, path, bin_file):
         b = get_raw(color["b"], bin_file)
         colors.append((r, g, b))
 
-    draw_image = pygame.surface.Surface([width, height])
+    rows = []
     y = 0
     for row in image["rows"]:
         x = 0
+        rows.append([])
         for pixel in row["pixels"]:
             color_index = get_raw(pixel["color_index"], bin_file)
-            new_color = colors[color_index]
-            draw_image.set_at([x, y], new_color)
+            c = colors[color_index]
+            for i in range(3):
+                rows[y].append(c[i])
+
             x += 1
         y += 1
 
-    #trace("GIF SAVED TO: " + path + gif_name[:-4] + ".png")
-    pygame.image.save(draw_image, path + gif_name[:-4] + ".png")
+    #write png
+    f = open(path + gif_name[:-4] + ".png", "wb")
+    f.truncate()
+    w = png.Writer(width, height)
+    w.write(f, rows)
+    f.close()
 
 # Open WORLD.WDB using format wdb and pattern wdb. Then write all of the bin
 # files based on the tables in the header of the wdb.
@@ -225,8 +236,6 @@ def extract_wdb():
 
                 bin_file.seek(item_offset)
                 write_file.write(bin_file.read(size_of_item))
-                #for each_byte in range(size_of_item):
-                #    write_file.write(bin_file.read(1))
                 write_file.close()
 
     #write gif chunk to be extracted by extract_gif_chunk()
@@ -241,8 +250,6 @@ def extract_wdb():
 # gifs lying around inside it that aren't specifically assigned to any models,
 # they are probably just loaded into memory when the game loads.
 def extract_gif_chunk():
-    import pygame
-
     bin_file = open(SETTINGS["gif_path"] + "gifchunk.bin", "rb")
 
     data = get_formatted_data(bin_file, "wdb", "gifchunk")
@@ -254,30 +261,25 @@ def extract_gif_chunk():
 # and call extract_pattern() on each of them. It will try to extract using the
 # pattern with no animations, and then with animations.
 def extract_models():
-    import os
-
     #find all files in the groups folder that end in .bin
     bin_files = [os.path.join(root, name)
         for root, dirs, files in os.walk(SETTINGS["bin_path"])
         for name in files
         if name.endswith((".bin"))]
 
+    #overwrite bin_files for testing extraction of one particular file
+    if SETTINGS["override"]:
+        bin_files = [SETTINGS["override_path"]]
+
     total_file_num = len(bin_files)
     files_extracted = 0
 
-    #overwrite bin_files for testing extraction of one particular file
-    #bin_files = ["./bin/ACT1/sub1/carcomp.bin"]
-
     #go through all bin files with extract_pattern() using two different patterns, using whichever one works
     for file_path in bin_files:
-        used_pattern = "model"
-        progress = extract_pattern(file_path, used_pattern)
-        #if "X" in progress:
-        #    used_pattern = "model"
-        #    progress = extract_pattern(file_path, used_pattern)
+        progress = extract_pattern(file_path, "model")
 
         #display the name and progress for this file
-        trace(file_path.ljust(40) + str(progress) + " " + used_pattern)
+        trace(file_path.ljust(40) + str(progress))
 
         #success, increment files_extracted
         if "X" not in progress:
@@ -292,7 +294,6 @@ def extract_models():
 # mdl file to connect the textures with the models.
 def extract_pattern(file_path, pattern):
     global MATERIALS
-    import pygame
     bin_file = open(file_path, "rb")
 
     #reset materials to empty
@@ -306,12 +307,15 @@ def extract_pattern(file_path, pattern):
         #trace(str(data))
         progress[0] = "_"
     except:
-        traceback.print_exc()
+        trace_error()
         return progress
 
     #EXPORT OBJ
     try:
         file_name = get_raw(data["file_name"], bin_file)
+
+        file_path = file_path.replace("\\", "/")
+        obj_path = create_dir(SETTINGS["obj_path"] + file_path[file_path.find("/", 3):file_path.rfind("/")] + "/" + file_name + "/")
 
         #trace(data)
         for component in data["components"]:
@@ -320,8 +324,6 @@ def extract_pattern(file_path, pattern):
                 model_index = len(component["models"])
                 for model in component["models"]:
                     model_index -= 1
-                    file_path = file_path.replace("\\", "/")
-                    obj_path = create_dir("./obj" + file_path[file_path.find("/", 3):file_path.rfind("/")] + "/" + file_name + "/")
                     #trace(obj_path)
                     export_obj(data, model, bin_file, obj_path + component_name + str(model_index))
             else:
@@ -329,7 +331,7 @@ def extract_pattern(file_path, pattern):
                 pass
         progress[1] = "_"
     except:
-        traceback.print_exc()
+        trace_error()
         return progress
 
 
@@ -340,15 +342,16 @@ def extract_pattern(file_path, pattern):
 
         #export textures embedded in this bin group as .png
         for image in data["images"]:
+            #normal gif
             export_gif(image, obj_path, bin_file)
-            #special hidden textures, only seen on isle_hi
-            #if file_name[-1:] == "X":
-            #	hide_image, file_name2 = read_gif(bin_file, False)
-            #	pygame.image.save(hide_image, newpath + "hide_" + file_name + ".png")
+            #special hidden gif, only seen on isle and isle_hi gifs
+            if "extra_images" in image:
+                image["extra_images"][0]["gif_name"] = image["gif_name"]
+                export_gif(image["extra_images"][0], obj_path + "/hidden_", bin_file)
             found_materials.append(get_raw(image["gif_name"], bin_file)[:-4])
         progress[2] = "_"
     except:
-        traceback.print_exc()
+        trace_error()
         return progress
 
     #EXPORT MATERIALS
@@ -356,13 +359,24 @@ def extract_pattern(file_path, pattern):
         #export materials without textures as .png, just their rgb on a 4x4 texture
         for material in MATERIALS:
             if material not in found_materials:
-                new_image = pygame.surface.Surface([4, 4])
-                new_image.fill(MATERIALS[material])
-                pygame.image.save(new_image, obj_path + material + ".png")
-                #trace("MATERIAL SAVED TO: " + obj_path + material + ".png")
+                #write 4x4 png of color c
+                c = MATERIALS[material]
+                rows = []
+                for row in range(4):
+                    rows.append([])
+                    for pixel in range(4):
+                        rows[row].append(c[0])
+                        rows[row].append(c[1])
+                        rows[row].append(c[2])
+                f = open(obj_path + material + ".png", "wb")
+                f.truncate()
+                w = png.Writer(4, 4)
+                w.write(f, rows)
+                f.close()
+
         progress[3] = "_"
     except:
-        traceback.print_exc()
+        trace_error()
         return progress
 
     #EXPORT MTL FILE
@@ -370,14 +384,23 @@ def extract_pattern(file_path, pattern):
         export_mtl(data, obj_path, bin_file)
         progress[4] = "_"
     except:
-        traceback.print_exc()
+        trace_error()
         return progress
 
     return progress
 
 def main():
-    #extract_wdb()
-    #extract_gif_chunk()
-    extract_models()
+    if SETTINGS["extract_wdb"]:
+        print("Extracting WDB...")
+        extract_wdb()
+        print("Extracting GIFs...")
+        extract_gif_chunk()
+    if SETTINGS["extract_obj"]:
+        print("Creating OBJs from BINs...")
+        extract_models()
+    print("Done!")
 
-main()
+if SETTINGS["profile"]:
+    cProfile.runctx( "main()", globals(), locals(), filename="wdb_ripper.profile" )
+else:
+    main()

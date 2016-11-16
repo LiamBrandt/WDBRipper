@@ -21,6 +21,11 @@ import traceback
 
 import color_console as cons
 
+SETTINGS = {
+    "trace": False,
+    "safe_debug": False,
+}
+
 INDICES = {}
 
 #Similar to the chunk structure, but it is flat, so variables of the same name will be overwritten.
@@ -33,12 +38,12 @@ MARKERS = {}
 ABORT = False
 
 def trace(text):
-    pass
-    #print(text)
+    if SETTINGS["trace"]:
+        print(text)
 
 def trace_error():
-    pass
-    #traceback.print_exc()
+    if SETTINGS["trace"]:
+        traceback.print_exc()
     #time.sleep(1)
 
 def shorten_text(text, length):
@@ -65,18 +70,20 @@ def shorten_vowels(text, length):
     return final
 
 def chunk_trace(text, layer):
-    trace(shorten_vowels(layer, 12) + "   " + text)
+    if SETTINGS["trace"]:
+        trace(shorten_vowels(layer, 12) + "   " + text)
 
 #makes unpacking binary values easier
 def unpack(bin_file, data_type, length_arg=0):
-    global ABORT
-    current_offset = bin_file.tell()
-    bin_file.seek(0, 2)
-    if current_offset == bin_file.tell():
-        #trying to read bytes that dont exist, we are at end of file!
-        ABORT = True
-        return ["EOF"]
-    bin_file.seek(current_offset)
+    if SETTINGS["safe_debug"]:
+        global ABORT
+        current_offset = bin_file.tell()
+        bin_file.seek(0, 2)
+        if current_offset == bin_file.tell():
+            #trying to read bytes that dont exist, we are at end of file!
+            ABORT = True
+            return ["EOF"]
+        bin_file.seek(current_offset)
 
     #integer or unsigned integer
     if data_type == "i" or data_type == "I":
@@ -171,10 +178,10 @@ def interpret_chunk(format_file, bin_file, layer):
 
             line_list = line.split()
 
-            #trace('\033[94m' + str(skipping_until_endif) + ": " + str(bin_file.tell()) + " - " + str(chunk))
-            cons.set_text_attr(cons.FOREGROUND_RED | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
-            chunk_trace("(STATUS): " + str(skipping_until_endif) + ": " + str(format_file.tell()) + " --> " + str(line_list), layer)
-            cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
+            if SETTINGS["trace"]:
+                cons.set_text_attr(cons.FOREGROUND_RED | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
+                chunk_trace("(STATUS): " + str(skipping_until_endif) + ": " + str(format_file.tell()) + " --> " + str(line_list), layer)
+                cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
 
             #ignore comments and blank lines
             if line.startswith("#") or len(line_list) == 0:
@@ -301,6 +308,12 @@ def interpret_chunk(format_file, bin_file, layer):
                 bin_file.seek(get_dynamic_number(line_list[1], VARS, bin_file))
                 continue
 
+            #SEEKREL offset
+            if line_list[0] == "SEEKREL":
+                chunk_trace("SEEKREL", layer)
+                bin_file.seek(get_dynamic_number(line_list[1], VARS, bin_file), 1)
+                continue
+
             #normal line
             chunk_trace("UNPACK DATA", layer)
             if len(line_list) > 2:
@@ -317,9 +330,10 @@ def interpret_chunk(format_file, bin_file, layer):
                 flags["return"] = True
                 return chunk, flags
 
-            cons.set_text_attr(cons.FOREGROUND_YELLOW | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
-            chunk_trace("(DATA): " + str(data) + ", FORM: " + str(bin_list[0]) + ", OFF: " + str(bin_list[1]), layer)
-            cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
+            if SETTINGS["trace"]:
+                cons.set_text_attr(cons.FOREGROUND_YELLOW | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
+                chunk_trace("(DATA): " + str(data) + ", FORM: " + str(bin_list[0]) + ", OFF: " + str(bin_list[1]), layer)
+                cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
     except:
         trace_error()
         chunk_trace(">>>END CHUNK by error: exception in interpret_chunk()>>>", layer)
