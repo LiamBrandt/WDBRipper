@@ -3,20 +3,20 @@
 number_of_groups I
 
 CHUNK groups number_of_groups
-  size_of_string I
-  group_title s size_of_string
+  size_of_group_title I
+  group_title s size_of_group_title
 
   CHUNK subgroups 2
     num_sub_items I
     CHUNK sub_items num_sub_items
-      size_of_string I
-      sub_item_title s size_of_string
+      size_of_sub_item_title I
+      sub_item_title s size_of_sub_item_title
       size_of_item I
       item_offset I
 
       IF INDEX/subgroups 1
-        size_of_string I
-        presenter_title s size_of_string
+        size_of_presenter_title I
+        presenter_title s size_of_presenter_title
         SKIP 37
       ENDIF
     END
@@ -137,7 +137,6 @@ END
 
 #COMPONENT
 CHUNK components number_of_components+1
-  MARKER STARTCOMP
   size_of_string I
   component_name s size_of_string
 
@@ -222,7 +221,7 @@ CHUNK components number_of_components+1
   MARKER ENDCOMP
 END
 
-#MARKER MODELGIFS
+#MODELGIFS
 num_images I
 SKIP 4
 CHUNK images num_images
@@ -232,7 +231,6 @@ CHUNK images num_images
   SEEKREL -1
   gif_name s size_of_string
 
-  MARKER RAWGIF
   width I
   height I
   num_colors I

@@ -1,3 +1,9 @@
+"""
+This is a tool to extract data from the Lego Island WORLD.WDB. This data
+is used to export OBJ, MTL and PNG files based on the model data found in
+WORLD.WDB.
+"""
+
 import traceback
 import cProfile
 import os
@@ -20,6 +26,7 @@ if SETTINGS["write_log"]:
     log.truncate()
     log.close()
 def trace(text):
+    """Print text to the console."""
     if SETTINGS["verbose"]:
         print(text)
         if SETTINGS["write_log"]:
@@ -28,18 +35,25 @@ def trace(text):
             log.close()
 
 def trace_error():
+    """Print the most recent error to the console."""
     if SETTINGS["verbose"]:
         traceback.print_exc()
 
-# Creates a folder and returns the path to it.
 def create_dir(path):
+    """Create a folder and return the path to it."""
     if not os.path.exists(path):
         os.makedirs(path)
     return path
 
-# Create an object file based on the data provided in dictionary data, whose
-# structure is based on the format described in the wdb format file.
 def export_obj(data, model, bin_file, filename):
+    """
+    Create a wavefront object file based on the data and model dictionaries.
+
+    The dictionaries data and model are based on the wdb format taken from
+    get_formatted_data() in formatter.py. The object file is exported to
+    the path specified by filename.
+    """
+
     global MATERIALS
     obj_file = open(filename + ".obj", "w")
     obj_file.truncate()
@@ -68,7 +82,7 @@ def export_obj(data, model, bin_file, filename):
         text_definitions = []
 
         if len(part["coordinate_indices"]) > 0 and len(part["coordinate_indices"]) != len(part["indices"]):
-            trace("888888888888888888888888888888888888 woW Weird error")
+            trace("This shouldn't happen!!!!!")
 
         for index in range(len(part["indices"])):
             vert_indices = []
@@ -151,9 +165,13 @@ def export_obj(data, model, bin_file, filename):
 
     obj_file.close()
 
-# Create an mtl file with all of the materials stored in MATERIALS for this
-# particular bin file. These will be used by all LOD models in the bin file.
 def export_mtl(data, path, bin_file):
+    """
+    Create a material file to be used by wavefront object files.
+
+    Creates a mtl file using some default values plus the paths to the
+    materials used by the object files.
+    """
     global MATERIALS
     file = open(path + get_raw(data["file_name"], bin_file) + ".mtl", "w")
     file.truncate()
@@ -173,15 +191,17 @@ def export_mtl(data, path, bin_file):
 
     file.close()
 
-# Create a gif image based on image, a dictionary whose structure is given
-# by the wdb format file. The image is saved to path.
 def export_gif(image, path, bin_file):
+    """
+    Create a PNG image based on a GIF image.
+
+    The GIF data is specified in the dictionary image and contains formatted
+    data based on the wdb structure. The PNG image is saved to path.
+    """
     gif_name = get_raw(image["gif_name"], bin_file)
     width = get_raw(image["width"], bin_file)
     height = get_raw(image["height"], bin_file)
     num_colors = get_raw(image["num_colors"], bin_file)
-
-    #trace("Exporting GIF. W: " + str(width) + ", H: " + str(height) + ", NAME: " + str(gif_name) + ", COLORS: " + str(num_colors))
 
     colors = []
     for color in image["colors"]:
@@ -211,9 +231,14 @@ def export_gif(image, path, bin_file):
     w.write(f, rows)
     f.close()
 
-# Open WORLD.WDB using format wdb and pattern wdb. Then write all of the bin
-# files based on the tables in the header of the wdb.
 def extract_wdb():
+    """
+    Open WORLD.WDB and write all the sections as *.bin files.
+
+    Open WORLD.WDB as specified by the structure found in the wdb format
+    file. Export each section of the wdb as a bin file in the folder
+    hiearchy found in the header of the wdb file.
+    """
     bin_file = open("./WORLD.WDB", "rb")
 
     data = get_formatted_data(bin_file, "wdb", "wdb")
@@ -245,11 +270,14 @@ def extract_wdb():
     write_file.write(bin_file.read(get_raw(data["gif_chunk_size"], bin_file)))
     write_file.close()
 
-# Extract all of the gif images from the gifchunk.bin, which is just data that
-# was extracted from the raw wdb. This is neccesary because the wdb has random
-# gifs lying around inside it that aren't specifically assigned to any models,
-# they are probably just loaded into memory when the game loads.
 def extract_gif_chunk():
+    """
+    Extract all of the GIF images from gifchunk.bin as PNGs.
+
+    gifchunk.bin is just raw gifs that were found lying around in the wdb.
+    They aren't specifically assigned to any models, and are likely just
+    loaded into memory when Lego Island loads.
+    """
     bin_file = open(SETTINGS["gif_path"] + "gifchunk.bin", "rb")
 
     data = get_formatted_data(bin_file, "wdb", "gifchunk")
@@ -257,10 +285,13 @@ def extract_gif_chunk():
     for image in data["images"]:
         export_gif(image, SETTINGS["gif_path"], bin_file)
 
-# Go through all of the bin files in the folder hierarchy that was extracted,
-# and call extract_pattern() on each of them. It will try to extract using the
-# pattern with no animations, and then with animations.
 def extract_models():
+    """
+    Go through all *.bin files and extract the models from them.
+
+    Calls extract_pattern() on all of the bin files, this function's purpose
+    is just to keep track of which files extract and which ones don't.
+    """
     #find all files in the groups folder that end in .bin
     bin_files = [os.path.join(root, name)
         for root, dirs, files in os.walk(SETTINGS["bin_path"])
@@ -288,11 +319,20 @@ def extract_models():
     #final stat printed
     trace(str(files_extracted) + " out of " + str(total_file_num) + " extracted!")
 
-# Grab data from a specific bin file using the specified pattern in the wdb
-# format file. The data will then be used to create wavefront object files
-# from vertex, normal and coordinate data, gif images from textures, and a
-# mdl file to connect the textures with the models.
 def extract_pattern(file_path, pattern):
+    """
+    Attempt to extract data from a .bin file and return the progress made.
+
+    There are five steps to extraction:
+     * Interpret data from the wdb using the wdb format file
+     * Export the object files using the data
+     * Export textures
+     * Export materials
+     * Export the material file mtl
+    These steps are represented by the list of five items returned by the
+    function that signify if that step was successful. '_' means success,
+    and 'X' means failure.
+    """
     global MATERIALS
     bin_file = open(file_path, "rb")
 

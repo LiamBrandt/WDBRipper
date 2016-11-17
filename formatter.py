@@ -1,17 +1,19 @@
-# This tool is intended to make extraction of data from raw binary files
-# easier. Any text file contained in ./formats can be used to describe the
-# format of a binary file, and pointers to each point of data will be
-# stored in a dictionary. To get the data from a binary file using this
-# reference dictionary, call get_raw(bin_list, bin_file) where bin_list
-# is the 2 item list found in the reference dictionary for the piece of
-# data you want to get. bin_file is the binary file you are extracting the
-# data from.
+"""
+This tool is intended to make extraction of data from raw binary files
+easier. Any text file contained in ./formats can be used to describe the
+format of a binary file, and pointers to each point of data will be
+stored in a dictionary. To get the data from a binary file using this
+reference dictionary, call get_raw(bin_list, bin_file) where bin_list
+is the 2 item list found in the reference dictionary for the piece of
+data you want to get. bin_file is the binary file you are extracting the
+data from.
 
-# PROBLEMS
-# * Cannot do nested IF statements
-# * Cannot handle nested parentheses in get_dynamic_number()
-# * INDEX needs to be made respective to each CHUNK, not just stored in VARS
-# * Fix PEMDAS in get_dynamic_number()
+Problems:
+ * Cannot do nested IF statements
+ * Cannot handle nested parentheses in get_dynamic_number()
+ * INDEX needs to be made respective to each CHUNK, not just stored in VARS
+ * Fix PEMDAS in get_dynamic_number()
+"""
 
 import struct
 import sys
@@ -28,9 +30,7 @@ SETTINGS = {
 
 INDICES = {}
 
-#Similar to the chunk structure, but it is flat, so variables of the same name will be overwritten.
-#This gives a list of the most recently set variables without having to work back in a nested
-# dictionary, assuming variable names are globally unique.
+#flat dictionary of variables previously defined
 VARS = {}
 
 MARKERS = {}
@@ -38,23 +38,18 @@ MARKERS = {}
 ABORT = False
 
 def trace(text):
+    """Print the text to the console if SETTINGS["trace"] is True."""
     if SETTINGS["trace"]:
         print(text)
 
 def trace_error():
+    """Print the last error to the console."""
     if SETTINGS["trace"]:
         traceback.print_exc()
     #time.sleep(1)
 
-def shorten_text(text, length):
-    if len(text) <= length:
-        split = text.ljust(length)
-    else:
-        split = text[:length]
-    final = "[" + split + "]"
-    return final
-
 def shorten_vowels(text, length):
+    """Return the shorter text of specified length by removing vowels."""
     text = text.lower()
     vowels = ["y", "u", "o", "i", "e", "a"]
     for v in vowels:
@@ -70,11 +65,20 @@ def shorten_vowels(text, length):
     return final
 
 def chunk_trace(text, layer):
+    """Print the text to the console along with the current chunk layer."""
     if SETTINGS["trace"]:
         trace(shorten_vowels(layer, 12) + "   " + text)
 
-#makes unpacking binary values easier
 def unpack(bin_file, data_type, length_arg=0):
+    """
+    Use struct.unpack() to load a value from the binary file.
+
+    Keyword arguments:
+    length_arg -- the length of the data, used only for strings
+
+    Use data_type to tell what type of data to unpack from bin_file, then return
+    the unpacked data.
+    """
     if SETTINGS["safe_debug"]:
         global ABORT
         current_offset = bin_file.tell()
@@ -107,11 +111,16 @@ def unpack(bin_file, data_type, length_arg=0):
         trace("UNKNOWN UNPACK DATA TYPE: " + str(data_type))
         sys.exit(0)
 
-#if var is string, get int from var in current chunk, otherwise return the int
-# In every case chunk is VARS, a dictionary of all variables ever loaded
-# from the file format structure.
 def get_dynamic_number(var, chunk, bin_file):
-    #trace("step: " + str(var))
+    """
+    Get and return an integer based on a math expression and or variables.
+
+    If var is just an integer in string form, return the integer. Otherwise
+    evaluate var as a mathematical expression, calling get_dynamic_number()
+    on both sides of an operand until an integer value is reached. Variable
+    names defined in previously in the format file can be used instead of
+    integers.
+    """
     try:
         number = int(var)
     except:
@@ -147,12 +156,20 @@ def get_dynamic_number(var, chunk, bin_file):
                 number = INDICES[var.split(":")[1]]
                 trace("FOUND 'INDEX:' of " + str(number))
             else:
-                number = get_raw(chunk[var], bin_file, tracer="get_dynamic_number")
+                number = get_raw(chunk[var], bin_file)
 
     return number
 
-#potentially recursive function to interpret format lines and read data from bin_file
 def interpret_chunk(format_file, bin_file, layer):
+    """
+    Interpret binary data from bin_file using the format from format_file.
+
+    Read lines from format_file. For each line, identify what the line is
+    telling the interpret_chunk() to do, and do it. This could mean anything
+    from carrying out an if statement, to jumping to an offset, to
+    creating a new chunk inside of this chunk by calling interpret_chunk()
+    recursively.
+    """
     global INDICES
     global VARS
 
@@ -324,7 +341,7 @@ def interpret_chunk(format_file, bin_file, layer):
             VARS[line_list[0]] = bin_list
 
             #advance in bin_file for correct offset to be stored in bin_list
-            data = get_raw(bin_list, bin_file, False, tracer="interpret_chunk")
+            data = get_raw(bin_list, bin_file, False)
             if data == "ERROR":
                 chunk_trace(">>>END CHUNK by error: data is 'ERROR'>>>", layer)
                 flags["return"] = True
@@ -340,9 +357,18 @@ def interpret_chunk(format_file, bin_file, layer):
         flags["return"] = True
         return chunk, flags
 
-def get_raw(bin_list, bin_file, return_to_pos=True, tracer=None):
-    if tracer != None:
-        pass
+def get_raw(bin_list, bin_file, return_to_pos=True):
+    """
+    Unpack and return binary data from bin_file using bin_list.
+
+    Keyword arguments:
+    return_to_pos -- whether or not to return to the offset of bin_file before the get_raw() was called
+
+    Use the form from bin_list[0] and offset from bin_list[1] to unpack
+    the binary data at the offset with a specific form. This form is a string
+    that will be given to unpack() as the data_type for the data to be
+    unpacked.
+    """
 
     form = bin_list[0]
     offset = bin_list[1]
@@ -374,6 +400,14 @@ def get_raw(bin_list, bin_file, return_to_pos=True, tracer=None):
     return raw
 
 def get_formatted_data(bin_file, format_name, pattern_name):
+    """
+    Return a structured dictionary of data about values contained in bin_file.
+
+    Open a format file based on format_name and find a pattern to start from
+    based on pattern_name. Return a dictionary with values that are
+    tuples that represent what type of data is stored at a certain offset in
+    bin_file, and keys that are descriptions of that data.
+    """
     global MARKERS
     global ABORT
     ABORT = False
