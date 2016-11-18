@@ -364,8 +364,20 @@ def extract_pattern(file_path, pattern):
                 model_index = len(component["models"])
                 for model in component["models"]:
                     model_index -= 1
-                    #trace(obj_path)
-                    export_obj(data, model, bin_file, obj_path + component_name + str(model_index))
+                    #determine whether or not to export this LOD model based on SETTINGS
+                    export = False
+                    if SETTINGS["highest_lod_only"]:
+                        if model_index == 0:
+                            export = True
+                    else:
+                        export = True
+
+                    if export:
+                        if SETTINGS["highest_lod_only"] and not SETTINGS["lod_labels"]:
+                            end_string = ""
+                        else:
+                            end_string = "_lod" + str(model_index)
+                        export_obj(data, model, bin_file, obj_path + component_name + end_string)
             else:
                 #no models in this component, only the component header
                 pass

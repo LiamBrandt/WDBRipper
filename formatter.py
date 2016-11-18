@@ -16,7 +16,6 @@ Problems:
 """
 
 import struct
-import sys
 import time
 import os
 import traceback
@@ -46,7 +45,6 @@ def trace_error():
     """Print the last error to the console."""
     if SETTINGS["trace"]:
         traceback.print_exc()
-    #time.sleep(1)
 
 def shorten_vowels(text, length):
     """Return the shorter text of specified length by removing vowels."""
@@ -109,7 +107,6 @@ def unpack(bin_file, data_type, length_arg=0):
         return int(struct.unpack(data_type, bin_file.read(1))[0])
     else:
         trace("UNKNOWN UNPACK DATA TYPE: " + str(data_type))
-        sys.exit(0)
 
 def get_dynamic_number(var, chunk, bin_file):
     """

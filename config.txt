@@ -6,6 +6,9 @@
     "extract_wdb": True,
     "extract_obj": True,
 
+    "highest_lod_only": True,
+    "lod_labels": False,
+
     "verbose": True,
     "write_log": True,
 
