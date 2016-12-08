@@ -233,7 +233,7 @@ def export_gif(image, path, bin_file):
         y += 1
 
     #write png
-    f = open(path + gif_name[:-4] + ".png", "wb")
+    f = open(path + "/" + gif_name[:-4] + ".png", "wb")
     f.truncate()
     w = png.Writer(width, height)
     w.write(f, rows)
@@ -247,7 +247,7 @@ def extract_wdb():
     file. Export each section of the wdb as a bin file in the folder
     hiearchy found in the header of the wdb file.
     """
-    bin_file = open("./WORLD.WDB", "rb")
+    bin_file = open("WORLD.WDB", "rb")
 
     data = get_formatted_data(bin_file, "wdb", "wdb")
 
@@ -262,9 +262,9 @@ def extract_wdb():
                 item_offset = get_raw(each_sub_item["item_offset"], bin_file)
                 size_of_item = get_raw(each_sub_item["size_of_item"], bin_file)
 
-                directory = create_dir(SETTINGS["bin_path"] + group_title[:-1] + "/" + subgroup_title + "/")
+                directory = create_dir(SETTINGS["bin_path"] + "/" + group_title[:-1] + "/" + subgroup_title + "/")
 
-                write_file = open(directory + sub_item_title[:-1] + ".bin", "wb")
+                write_file = open(directory + "/" + sub_item_title[:-1] + ".bin", "wb")
                 write_file.truncate()
 
                 bin_file.seek(item_offset)
@@ -273,14 +273,14 @@ def extract_wdb():
 
     #write gif chunk to be extracted by extract_gif_chunk()
     directory = create_dir(SETTINGS["gif_path"])
-    write_file = open(directory + "gifchunk.bin", "wb")
+    write_file = open(directory + "/gifchunk.bin", "wb")
     bin_file.seek(data["gif_chunk_size"][1]+4)
     write_file.write(bin_file.read(get_raw(data["gif_chunk_size"], bin_file)))
     write_file.close()
 
     #write model chunk to be extracted by extract_model_chunk()
     directory = create_dir(SETTINGS["gif_path"])
-    write_file = open(directory + "modelchunk.bin", "wb")
+    write_file = open(directory + "/modelchunk.bin", "wb")
     bin_file.seek(data["model_chunk_size"][1]+4)
     write_file.write(bin_file.read(get_raw(data["model_chunk_size"], bin_file)))
     write_file.close()
@@ -293,7 +293,7 @@ def extract_gif_chunk():
     They aren't specifically assigned to any models, and are likely just
     loaded into memory when Lego Island loads.
     """
-    bin_file = open(SETTINGS["gif_path"] + "gifchunk.bin", "rb")
+    bin_file = open(SETTINGS["gif_path"] + "/gifchunk.bin", "rb")
 
     data = get_formatted_data(bin_file, "wdb", "gifchunk")
 
@@ -301,7 +301,7 @@ def extract_gif_chunk():
         export_gif(image, SETTINGS["gif_path"], bin_file)
 
 def extract_model_chunk():
-    bin_file = open(SETTINGS["gif_path"] + "modelchunk.bin", "rb")
+    bin_file = open(SETTINGS["gif_path"] + "/modelchunk.bin", "rb")
 
     data = get_formatted_data(bin_file, "wdb", "modelchunk")
     bin_file.seek(0)
@@ -388,9 +388,6 @@ def extract_pattern(file_path, pattern):
     try:
         file_name = get_raw(data["file_name"], bin_file)
 
-        file_path = file_path.replace("\\", "/")
-        obj_path = create_dir(SETTINGS["obj_path"] + file_path[file_path.find("/", 3):file_path.rfind("/")] + "/" + file_name + "/")
-
         #trace(data)
         for component in data["components"]:
             component_name = get_raw(component["component_name"], bin_file)
@@ -411,6 +408,9 @@ def extract_pattern(file_path, pattern):
                             end_string = ""
                         else:
                             end_string = "_lod" + str(model_index)
+                        file_path = file_path.replace("\\", "/")
+                        print("FILE PATH: " + file_path)
+                        obj_path = create_dir(SETTINGS["obj_path"] + "/" + file_path[file_path.find("/", 3):file_path.rfind("/")] + "/" + file_name + "/")
                         export_obj(data, model, bin_file, obj_path + component_name + end_string)
             else:
                 #no models in this component, only the component header

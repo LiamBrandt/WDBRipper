@@ -1,8 +1,8 @@
 {
-    "bin_path": "./bin/",
-    "gif_path": "./gif/",
-    "obj_path": "./obj/",
-    "stat_path": "./stats/",
+    "bin_path": "bin",
+    "gif_path": "gif",
+    "obj_path": "obj",
+    "stat_path": "stats",
 
     "extract_wdb": True,
     "extract_obj": True,
@@ -17,5 +17,5 @@
     "statistics": True,
 
     "override": False,
-    "override_path": "./bin/ACT1/sub1/isle.bin",
+    "override_path": "bin/ACT1/sub1/isle.bin",
 }
