@@ -20,7 +20,7 @@ import time
 import os
 import traceback
 
-import color_console as cons
+#import color_console as cons
 
 SETTINGS = {
     "trace": False,
@@ -192,10 +192,12 @@ def interpret_chunk(format_file, bin_file, layer):
 
             line_list = line.split()
 
+            """
             if SETTINGS["trace"]:
                 cons.set_text_attr(cons.FOREGROUND_RED | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
                 chunk_trace("(STATUS): " + str(skipping_until_endif) + ": " + str(format_file.tell()) + " --> " + str(line_list), layer)
                 cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
+            """
 
             #ignore comments and blank lines
             if line.startswith("#") or len(line_list) == 0:
@@ -345,10 +347,12 @@ def interpret_chunk(format_file, bin_file, layer):
                 flags["return"] = True
                 return chunk, flags
 
+            """
             if SETTINGS["trace"]:
                 cons.set_text_attr(cons.FOREGROUND_YELLOW | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
                 chunk_trace("(DATA): " + str(data) + ", FORM: " + str(bin_list[0]) + ", OFF: " + str(bin_list[1]), layer)
                 cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
+            """
     except:
         trace_error()
         chunk_trace(">>>END CHUNK by error: exception in interpret_chunk()>>>", layer)

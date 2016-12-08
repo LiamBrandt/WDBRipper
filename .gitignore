@@ -3,8 +3,9 @@
 *.obj
 *.mtl
 *.pyc
+*.bat
 bin
 obj
 gif
-*.bat
 dist
+stats

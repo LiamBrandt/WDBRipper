@@ -21,6 +21,12 @@ with open("config.txt","r") as inf:
 # is reset to an empty dictionary every time a new bin file is extracted.
 MATERIALS = {}
 
+STATS = {
+    "csv": {
+        "materials": [["Material", "Flat", "TimesUsed"]],
+    },
+}
+
 if SETTINGS["write_log"]:
     log = open("lastlog.txt", "w")
     log.truncate()
@@ -359,6 +365,7 @@ def extract_pattern(file_path, pattern):
     and 'X' means failure.
     """
     global MATERIALS
+    global STATS
     bin_file = open(file_path, "rb")
 
     #reset materials to empty
@@ -436,6 +443,7 @@ def extract_pattern(file_path, pattern):
         #export materials without textures as .png, just their rgb on a 4x4 texture
         for material in MATERIALS:
             if material not in found_materials:
+                found_materials.append(material)
                 #write 4x4 png of color c
                 c = MATERIALS[material]
                 rows = []
@@ -450,6 +458,18 @@ def extract_pattern(file_path, pattern):
                 w = png.Writer(4, 4)
                 w.write(f, rows)
                 f.close()
+
+
+        #statistics for materials
+        for material in found_materials:
+            found_duplicate = False
+            for row in STATS["csv"]["materials"]:
+                if row[0] == material:
+                    found_duplicate = True
+                    row[2] += 1
+            if not found_duplicate:
+                STATS["csv"]["materials"].append([material, "No", 1])
+
 
         progress[3] = "_"
     except:
@@ -466,6 +486,17 @@ def extract_pattern(file_path, pattern):
 
     return progress
 
+def export_stats():
+    stat_path = create_dir(SETTINGS["stat_path"])
+    for csv_key in STATS["csv"]:
+        csv_file = open(stat_path + csv_key + ".csv", "w")
+        csv_file.truncate()
+        for row in STATS["csv"][csv_key]:
+            for value in row:
+                csv_file.write(str(value) + ", ")
+            csv_file.write("\n")
+        csv_file.close()
+
 def main():
     if SETTINGS["extract_wdb"]:
         print("Extracting WDB...")
@@ -477,6 +508,9 @@ def main():
     if SETTINGS["extract_obj"]:
         print("Creating OBJs from BINs...")
         extract_models()
+    if SETTINGS["statistics"]:
+        print("Exporting statistics...")
+        export_stats()
     print("Done!")
 
 if SETTINGS["profile"]:

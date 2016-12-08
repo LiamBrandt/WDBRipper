@@ -2,8 +2,9 @@
     "bin_path": "./bin/",
     "gif_path": "./gif/",
     "obj_path": "./obj/",
+    "stat_path": "./stats/",
 
-    "extract_wdb": True,
+    "extract_wdb": False,
     "extract_obj": True,
 
     "highest_lod_only": True,
@@ -13,6 +14,7 @@
     "write_log": True,
 
     "profile": False,
+    "statistics": True,
 
     "override": False,
     "override_path": "./bin/ACT1/sub1/isle.bin",
