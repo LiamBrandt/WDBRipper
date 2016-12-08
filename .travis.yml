@@ -7,3 +7,6 @@ install:
 # command to run tests
 script:
   - python wdb_ripper.py
+  - ls
+  - cd bin
+  - ls
