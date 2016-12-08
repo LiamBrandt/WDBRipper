@@ -8,5 +8,5 @@ install:
 script:
   - python wdb_ripper.py
   - ls
-  - cd bin
+  - cd gif
   - ls
