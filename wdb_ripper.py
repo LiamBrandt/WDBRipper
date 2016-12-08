@@ -46,10 +46,11 @@ def trace_error():
         traceback.print_exc()
 
 def create_dir(path):
+    zero_stripped_path = path.strip("\0")
     """Create a folder and return the path to it."""
-    if not os.path.exists(os.path.normpath(path)):
-        os.makedirs(os.path.normpath(path))
-    return path
+    if not os.path.exists(zero_stripped_path):
+        os.makedirs(zero_stripped_path)
+    return zero_stripped_path
 
 def export_obj(data, model, bin_file, filename):
     """
