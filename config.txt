@@ -4,7 +4,7 @@
     "obj_path": "./obj/",
     "stat_path": "./stats/",
 
-    "extract_wdb": False,
+    "extract_wdb": True,
     "extract_obj": True,
 
     "highest_lod_only": True,
