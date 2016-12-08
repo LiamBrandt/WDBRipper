@@ -504,8 +504,8 @@ def main():
         extract_wdb()
         print("Extracting GIFs...")
         extract_gif_chunk()
-        print("Extracting BINCHUNK...")
-        extract_model_chunk()
+        #print("Extracting BINCHUNK...")
+        #extract_model_chunk()
     if SETTINGS["extract_obj"]:
         print("Creating OBJs from BINs...")
         extract_models()
