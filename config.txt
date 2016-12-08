@@ -16,6 +16,6 @@
     "profile": False,
     "statistics": True,
 
-    "override": True,
+    "override": False,
     "override_path": "./bin/ACT1/sub1/isle.bin",
 }

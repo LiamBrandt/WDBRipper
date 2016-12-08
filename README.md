@@ -1,4 +1,7 @@
 # WDBRipper
+
+[![Build Status](https://travis-ci.org/LiamBrandt/WDBRipper.svg?branch=master)](https://travis-ci.org/LiamBrandt/WDBRipper)
+
 Extracts the 3D models and textures from the Lego Island WORLD.WDB file.
 
 Most of the files in the sub1 folders can be read, the ones in sub0 cannot. This is something that can be worked on for the future.

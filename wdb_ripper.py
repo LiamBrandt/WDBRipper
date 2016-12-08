@@ -380,7 +380,7 @@ def extract_pattern(file_path, pattern):
         #trace(str(data))
         progress[0] = "_"
     except:
-        trace_error()
+        #trace_error()
         return progress
 
     #EXPORT OBJ
@@ -416,7 +416,7 @@ def extract_pattern(file_path, pattern):
                 pass
         progress[1] = "_"
     except:
-        trace_error()
+        #trace_error()
         return progress
 
 
@@ -436,7 +436,7 @@ def extract_pattern(file_path, pattern):
             found_materials.append(get_raw(image["gif_name"], bin_file)[:-4])
         progress[2] = "_"
     except:
-        trace_error()
+        #trace_error()
         return progress
 
     #EXPORT MATERIALS
@@ -474,7 +474,7 @@ def extract_pattern(file_path, pattern):
 
         progress[3] = "_"
     except:
-        trace_error()
+        #trace_error()
         return progress
 
     #EXPORT MTL FILE
@@ -482,7 +482,7 @@ def extract_pattern(file_path, pattern):
         export_mtl(data, obj_path, bin_file)
         progress[4] = "_"
     except:
-        trace_error()
+        #trace_error()
         return progress
 
     return progress
