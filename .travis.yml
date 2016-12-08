@@ -5,4 +5,10 @@ python:
 install:
   - pip install pypng
 # command to run tests
-script: python wdb_ripper.py
+script:
+  - python wdb_ripper.py
+  - ls
+  - cd bin
+  - ls
+  - cd ACT1
+  - ls
