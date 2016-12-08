@@ -14,7 +14,7 @@ from formatter import get_raw
 
 SETTINGS = {}
 
-with open('config.txt','r') as inf:
+with open("config.txt","r") as inf:
     SETTINGS = eval(inf.read())
 
 # MATERIALS stores all the materials for the bin file being extracted. This
@@ -270,6 +270,14 @@ def extract_wdb():
     write_file.write(bin_file.read(get_raw(data["gif_chunk_size"], bin_file)))
     write_file.close()
 
+    #write model chunk to be extracted by extract_model_chunk()
+    print(str(data["model_chunk_size"]))
+    directory = create_dir(SETTINGS["gif_path"])
+    write_file = open(directory + "modelchunk.bin", "wb")
+    bin_file.seek(data["model_chunk_size"][1]+4)
+    write_file.write(bin_file.read(get_raw(data["model_chunk_size"], bin_file)))
+    write_file.close()
+
 def extract_gif_chunk():
     """
     Extract all of the GIF images from gifchunk.bin as PNGs.
@@ -284,6 +292,23 @@ def extract_gif_chunk():
 
     for image in data["images"]:
         export_gif(image, SETTINGS["gif_path"], bin_file)
+
+def extract_model_chunk():
+    bin_file = open(SETTINGS["gif_path"] + "modelchunk.bin", "rb")
+
+    data = get_formatted_data(bin_file, "wdb", "modelchunk")
+    bin_file.seek(0)
+    for binn in data["bins"]:
+        end_bin_offset = get_raw(binn["end_bin_offset"], bin_file)
+        size_of_item = end_bin_offset - bin_file.tell()
+
+        write_file = open(SETTINGS["bin_path"] + "/" + get_raw(binn["bin_name"], bin_file) + ".bin", "wb")
+        write_file.truncate()
+
+        write_file.write(bin_file.read(size_of_item))
+        write_file.close()
+
+        bin_file.seek(end_bin_offset)
 
 def extract_models():
     """
@@ -447,6 +472,8 @@ def main():
         extract_wdb()
         print("Extracting GIFs...")
         extract_gif_chunk()
+        print("Extracting BINCHUNK...")
+        extract_model_chunk()
     if SETTINGS["extract_obj"]:
         print("Creating OBJs from BINs...")
         extract_models()

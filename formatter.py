@@ -202,6 +202,7 @@ def interpret_chunk(format_file, bin_file, layer):
                 chunk_trace("COMMENT/BLANK", layer)
                 continue
 
+            #IF statement
             if line_list[0] == "IF":
                 chunk_trace("IF", layer)
                 nested_ifs += 1
@@ -435,9 +436,10 @@ def get_formatted_data(bin_file, format_name, pattern_name):
     format_file.seek(0)
     while(True):
         line = format_file.readline().lstrip()
+        line_list = line.split()
 
         if line.startswith("@"):
-            if pattern_name in line:
+            if line_list[0] == "@"+pattern_name:
                 break
 
     data, flags = interpret_chunk(format_file, bin_file, "GLOBAL")

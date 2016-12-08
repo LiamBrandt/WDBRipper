@@ -24,6 +24,8 @@ CHUNK groups number_of_groups
 END
 
 gif_chunk_size I
+SKIP gif_chunk_size
+model_chunk_size I
 
 RETURN
 
@@ -52,6 +54,17 @@ CHUNK images num_images
 END
 RETURN
 
+@modelchunk
+size_of_chunk I
+num_bins I
+CHUNK bins num_bins
+  size_of_string I
+  bin_name s size_of_string
+  num_models I
+  end_bin_offset I
+  SEEK end_bin_offset
+END
+RETURN
 
 
 

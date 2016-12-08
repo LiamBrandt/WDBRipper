@@ -154,7 +154,7 @@ class Group(object):
         self.data_string = data_string
         self.offset = offset
 
-        self.value = str(get_raw((data_string, offset), bin_file, tracer="Group __init__"))
+        self.value = str(get_raw((data_string, offset), bin_file))
 
         self.update_rect()
 
