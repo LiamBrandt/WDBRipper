@@ -46,8 +46,9 @@ def trace_error():
         traceback.print_exc()
 
 def create_dir(path):
-    zero_stripped_path = path.strip("\0")
     """Create a folder and return the path to it."""
+    zero_stripped_path = os.path.normpath(path).strip("\0")
+    print(zero_stripped_path)
     if not os.path.exists(zero_stripped_path):
         os.makedirs(zero_stripped_path)
     return zero_stripped_path
@@ -278,7 +279,6 @@ def extract_wdb():
     write_file.close()
 
     #write model chunk to be extracted by extract_model_chunk()
-    print(str(data["model_chunk_size"]))
     directory = create_dir(SETTINGS["gif_path"])
     write_file = open(directory + "modelchunk.bin", "wb")
     bin_file.seek(data["model_chunk_size"][1]+4)
