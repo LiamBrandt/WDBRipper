@@ -47,8 +47,8 @@ def trace_error():
 
 def create_dir(path):
     """Create a folder and return the path to it."""
-    if not os.path.exists(path):
-        os.makedirs(path)
+    if not os.path.exists(os.path.normpath(path)):
+        os.makedirs(os.path.normpath(path))
     return path
 
 def export_obj(data, model, bin_file, filename):
