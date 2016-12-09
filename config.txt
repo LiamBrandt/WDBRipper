@@ -17,5 +17,5 @@
     "statistics": True,
 
     "override": False,
-    "override_path": "bin/ACT1/sub1/isle.bin",
+    "override_path": "bin/ACT1/sub1/barrel.bin",
 }

@@ -48,7 +48,6 @@ def trace_error():
 def create_dir(path):
     """Create a folder and return the path to it."""
     zero_stripped_path = os.path.normpath(path).strip("\0")
-    print(zero_stripped_path)
     if not os.path.exists(zero_stripped_path):
         os.makedirs(zero_stripped_path)
     return zero_stripped_path
@@ -181,7 +180,7 @@ def export_mtl(data, path, bin_file):
     materials used by the object files.
     """
     global MATERIALS
-    file = open(path + get_raw(data["file_name"], bin_file) + ".mtl", "w")
+    file = open(path + "/" + get_raw(data["file_name"], bin_file) + ".mtl", "w")
     file.truncate()
 
     for material in MATERIALS:
@@ -199,7 +198,7 @@ def export_mtl(data, path, bin_file):
 
     file.close()
 
-def export_gif(image, path, bin_file):
+def export_gif(image, path, bin_file, pretext=""):
     """
     Create a PNG image based on a GIF image.
 
@@ -233,7 +232,7 @@ def export_gif(image, path, bin_file):
         y += 1
 
     #write png
-    f = open(path + "/" + gif_name[:-4] + ".png", "wb")
+    f = open(path + "/" + pretext + gif_name[:-4] + ".png", "wb")
     f.truncate()
     w = png.Writer(width, height)
     w.write(f, rows)
@@ -329,7 +328,6 @@ def extract_models():
         for root, dirs, files in os.walk(SETTINGS["bin_path"])
         for name in files
         if name.endswith((".bin"))]
-    print(bin_files)
 
     #overwrite bin_files for testing extraction of one particular file
     if SETTINGS["override"]:
@@ -409,9 +407,8 @@ def extract_pattern(file_path, pattern):
                         else:
                             end_string = "_lod" + str(model_index)
                         file_path = file_path.replace("\\", "/")
-                        print("FILE PATH: " + file_path)
                         obj_path = create_dir(SETTINGS["obj_path"] + "/" + file_path[file_path.find("/", 3):file_path.rfind("/")] + "/" + file_name + "/")
-                        export_obj(data, model, bin_file, obj_path + component_name + end_string)
+                        export_obj(data, model, bin_file, obj_path + "/" + component_name + end_string)
             else:
                 #no models in this component, only the component header
                 pass
@@ -433,7 +430,7 @@ def extract_pattern(file_path, pattern):
             #special hidden gif, only seen on isle and isle_hi gifs
             if "extra_images" in image:
                 image["extra_images"][0]["gif_name"] = image["gif_name"]
-                export_gif(image["extra_images"][0], obj_path + "/hidden_", bin_file)
+                export_gif(image["extra_images"][0], obj_path, bin_file, pretext="hidden_")
             found_materials.append(get_raw(image["gif_name"], bin_file)[:-4])
         progress[2] = "_"
     except:
@@ -455,7 +452,7 @@ def extract_pattern(file_path, pattern):
                         rows[row].append(c[0])
                         rows[row].append(c[1])
                         rows[row].append(c[2])
-                f = open(obj_path + material + ".png", "wb")
+                f = open(obj_path + "/" + material + ".png", "wb")
                 f.truncate()
                 w = png.Writer(4, 4)
                 w.write(f, rows)
@@ -491,7 +488,7 @@ def extract_pattern(file_path, pattern):
 def export_stats():
     stat_path = create_dir(SETTINGS["stat_path"])
     for csv_key in STATS["csv"]:
-        csv_file = open(stat_path + csv_key + ".csv", "w")
+        csv_file = open(stat_path + "/" + csv_key + ".csv", "w")
         csv_file.truncate()
         for row in STATS["csv"][csv_key]:
             for value in row:
