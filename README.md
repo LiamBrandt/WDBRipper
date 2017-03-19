@@ -9,12 +9,11 @@ Most of the files in the sub1 folders can be read, the ones in sub0 cannot. This
 
 As of now, 451 out of 592 .bin files can be extracted!
 
-##Requirements:
+## Requirements:
  * Python 3 https://www.python.org/downloads/
  * PyPNG https://pythonhosted.org/pypng/index.html
-   Run `pip install pypng`
 
-##Usage:
+## Usage:
  * Run the executable:
 
  ```
@@ -29,7 +28,7 @@ As of now, 451 out of 592 .bin files can be extracted!
 
  * You can configure the tool with `config.txt`.
 
-##Understanding:
+## Understanding:
 The wdb file is split into many sections in a folder hierarchy, each section for a different model. The ripper currently extracts each of these sections, and saves each of them as a .bin file in their respective folder. You can find these files in `./bin` once the tool has been run. There are also loose GIF images in the wdb file not attached to any models, which are stored in `./gif`.
 
 Once the ripper has extracted all of the .bin files, the ripper will create 3D wavefront .obj files with .mtl material files plus all the textures as .png for that model. These converted models are stored in `./obj`.
