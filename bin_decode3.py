@@ -1,3 +1,21 @@
+"""
+Tool to help decode binary files
+Copyright (C) 2016 Liam Brandt <brandt.liam@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import pygame
 import sys
 import struct
@@ -9,21 +27,26 @@ from formatter import get_raw
 
 pygame.init()
 
+try:
+    input = raw_input
+except NameError:
+    pass
+
 SETTINGS = {
     "screen_x": 700,
     "screen_y": 800,
 
     "cells_per_row": 16,
 
-    "filename": raw_input("FILE: "),
-    "format": raw_input("FORMAT: "),
-    "pattern": raw_input("PATTERN: "),
+    "filename": input("FILE: "),
+    "format": input("FORMAT: "),
+    "pattern": input("PATTERN: "),
 
     "ignore_pattern": False,
 }
 pygame.display.set_caption(SETTINGS["filename"])
 
-SETTINGS["cell_width"] = SETTINGS["screen_x"] / SETTINGS["cells_per_row"]
+SETTINGS["cell_width"] = int(SETTINGS["screen_x"] / SETTINGS["cells_per_row"])
 SETTINGS["cell_height"] = SETTINGS["cell_width"]
 
 #round the screen width to the nearest cell
@@ -41,7 +64,7 @@ ABORT = False
 
 screen = pygame.display.set_mode([SETTINGS["screen_x"], SETTINGS["screen_y"]])
 
-main_font = pygame.font.Font("monaco.ttf", SETTINGS["cell_width"]/2)
+main_font = pygame.font.Font("cnr.otf", int(SETTINGS["cell_width"]/2))
 
 class Overlay(object):
     def __init__(self):
@@ -100,7 +123,7 @@ class Editor(object):
     def populate(self):
         self.data = []
 
-        length_to_read = (SETTINGS["cells_per_row"])* (SETTINGS["screen_y"]/SETTINGS["cell_height"])
+        length_to_read = (SETTINGS["cells_per_row"]) * int(SETTINGS["screen_y"]/SETTINGS["cell_height"])
 
         self.file.seek(-INFO["y_offset"]*SETTINGS["cells_per_row"])
         for each_byte in range(length_to_read):
@@ -264,8 +287,8 @@ def calculate_rect(offset, length):
     new_height = SETTINGS["cell_height"]
 
     pixels_down = INFO["y_offset"]*new_height
-    new_y = (offset/SETTINGS["cells_per_row"]) * new_height
-    new_x = (offset%SETTINGS["cells_per_row"]) * new_width
+    new_y = int(offset/SETTINGS["cells_per_row"]) * new_height
+    new_x = int(offset%SETTINGS["cells_per_row"]) * new_width
     new_y += pixels_down
 
     return (new_x, new_y, new_width*length, new_height)

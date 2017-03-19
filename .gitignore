@@ -4,8 +4,12 @@
 *.mtl
 *.pyc
 *.bat
+*.wdb
+__pycache__
 bin
 obj
 gif
 dist
 stats
+extra
+lastlog.txt

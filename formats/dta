@@ -1,0 +1,38 @@
+#Lego Island DTA File
+@dta
+magic_number I
+num_groups H
+CHUNK groups num_groups
+  size_of_group_name B
+  group_name s size_of_group_name
+  SKIP 2
+  unknownshort1 H
+  unknownshort2 H
+  unknownshort3 H
+  unknownshort4 H
+  unknownfloat1 f
+  unknownfloat2 f
+  unknownfloat3 f
+  unknownfloat4 f
+
+  num_subgroups B
+  size_of_string B
+  subgroup_name s size_of_string
+  SKIP 1
+  CHUNK unknownfloats 9
+    unknownfloat f
+  END
+  CHUNK subgroups num_subgroups-1
+    num_subgroups2 B
+    size_of_string B
+    subgroup_name s size_of_string
+    SKIP 1
+    CHUNK unknownfloats 9
+      unknownfloat f
+    END
+  END
+
+  unknown B
+END
+
+RETURN

@@ -1,4 +1,22 @@
 """
+Tool to extract data from the Lego Island WORLD.WDB
+Copyright (C) 2016 Liam Brandt <brandt.liam@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+"""
 This is a tool to extract data from the Lego Island WORLD.WDB. This data
 is used to export OBJ, MTL and PNG files based on the model data found in
 WORLD.WDB.
@@ -186,9 +204,9 @@ def export_mtl(data, path, bin_file):
     for material in MATERIALS:
         file.write("newmtl " + str(material) + "\n")
         file.write("Ns 0\n")
-        file.write("Ka 0.000000 0.000000 0.000000\n")
-        file.write("Kd 0.8 0.8 0.8\n")
-        file.write("Ks 0.8 0.8 0.8\n")
+        file.write("Ka 0.0\n")
+        file.write("Kd 1.0\n")
+        file.write("Ks 0.0\n")
         file.write("d 1\n")
         file.write("illum 2\n")
 
@@ -246,7 +264,7 @@ def extract_wdb():
     file. Export each section of the wdb as a bin file in the folder
     hiearchy found in the header of the wdb file.
     """
-    bin_file = open("WORLD.WDB", "rb")
+    bin_file = open(SETTINGS["wdb_path"], "rb")
 
     data = get_formatted_data(bin_file, "wdb", "wdb")
 

@@ -1,5 +1,6 @@
 # WDBRipper
 
+[![Build Status](https://img.shields.io/github/release/LiamBrandt/WDBRipper.svg)](https://github.com/LiamBrandt/WDBRipper/releases)
 [![Build Status](https://travis-ci.org/LiamBrandt/WDBRipper.svg?branch=master)](https://travis-ci.org/LiamBrandt/WDBRipper)
 
 Extracts the 3D models and textures from the Lego Island WORLD.WDB file.
@@ -9,8 +10,9 @@ Most of the files in the sub1 folders can be read, the ones in sub0 cannot. This
 As of now, 451 out of 592 .bin files can be extracted!
 
 ##Requirements:
- * Python 2.7 https://www.python.org/downloads/
+ * Python 3 https://www.python.org/downloads/
  * PyPNG https://pythonhosted.org/pypng/index.html
+   Run `pip install pypng`
 
 ##Usage:
  * Run the executable:

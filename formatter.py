@@ -1,4 +1,22 @@
 """
+Tool to make extraction of raw binary data easier
+Copyright (C) 2016 Liam Brandt <brandt.liam@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+"""
 This tool is intended to make extraction of data from raw binary files
 easier. Any text file contained in ./formats can be used to describe the
 format of a binary file, and pointers to each point of data will be
@@ -19,12 +37,11 @@ import struct
 import time
 import os
 import traceback
-
-#import color_console as cons
+from collections import OrderedDict
 
 SETTINGS = {
     "trace": False,
-    "safe_debug": False,
+    "safe_debug": True,
 }
 
 INDICES = {}
@@ -67,7 +84,7 @@ def chunk_trace(text, layer):
     if SETTINGS["trace"]:
         trace(shorten_vowels(layer, 12) + "   " + text)
 
-def unpack(bin_file, data_type, length_arg=0):
+def unpack(bin_file, data_type, length_arg=0, endianness="@"):
     """
     Use struct.unpack() to load a value from the binary file.
 
@@ -89,16 +106,16 @@ def unpack(bin_file, data_type, length_arg=0):
 
     #integer or unsigned integer
     if data_type == "i" or data_type == "I":
-        return int(struct.unpack(data_type, bin_file.read(4))[0])
+        return int(struct.unpack(endianness+data_type, bin_file.read(4))[0])
     #short or unsigned short
     elif data_type == "h" or data_type == "H":
-        return int(struct.unpack(data_type, bin_file.read(2))[0])
+        return int(struct.unpack(endianness+data_type, bin_file.read(2))[0])
     #float
     elif data_type == "f":
-        return float(struct.unpack(data_type, bin_file.read(4))[0])
+        return float(struct.unpack(endianness+data_type, bin_file.read(4))[0])
     #string
     elif data_type == "s":
-        return struct.unpack(str(length_arg) + data_type, bin_file.read(length_arg))[0]
+        return (struct.unpack(str(length_arg) + data_type, bin_file.read(length_arg))[0]).decode("UTF-8")
     #char
     elif data_type == "c":
         return struct.unpack(data_type, bin_file.read(1))[0]
@@ -155,7 +172,7 @@ def get_dynamic_number(var, chunk, bin_file):
             else:
                 number = get_raw(chunk[var], bin_file)
 
-    return number
+    return int(number)
 
 def interpret_chunk(format_file, bin_file, layer):
     """
@@ -175,7 +192,7 @@ def interpret_chunk(format_file, bin_file, layer):
     skipping_until_endif = False
     nested_ifs = 0
 
-    chunk = {}
+    chunk = OrderedDict()
     flags = {
         "return": False,
     }
@@ -191,13 +208,6 @@ def interpret_chunk(format_file, bin_file, layer):
             line = format_file.readline().lstrip()
 
             line_list = line.split()
-
-            """
-            if SETTINGS["trace"]:
-                cons.set_text_attr(cons.FOREGROUND_RED | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
-                chunk_trace("(STATUS): " + str(skipping_until_endif) + ": " + str(format_file.tell()) + " --> " + str(line_list), layer)
-                cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
-            """
 
             #ignore comments and blank lines
             if line.startswith("#") or len(line_list) == 0:
@@ -347,12 +357,6 @@ def interpret_chunk(format_file, bin_file, layer):
                 flags["return"] = True
                 return chunk, flags
 
-            """
-            if SETTINGS["trace"]:
-                cons.set_text_attr(cons.FOREGROUND_YELLOW | cons.BACKGROUND_BLACK | cons.FOREGROUND_INTENSITY)
-                chunk_trace("(DATA): " + str(data) + ", FORM: " + str(bin_list[0]) + ", OFF: " + str(bin_list[1]), layer)
-                cons.set_text_attr(cons.FOREGROUND_GREY | cons.BACKGROUND_BLACK)
-            """
     except:
         trace_error()
         chunk_trace(">>>END CHUNK by error: exception in interpret_chunk()>>>", layer)
@@ -378,12 +382,19 @@ def get_raw(bin_list, bin_file, return_to_pos=True):
     old_offset = bin_file.tell()
     bin_file.seek(offset)
 
+    #strip endianness from form
+    endianness = "@"
+    endian_list = ["=", "<", ">"]
+    if form[0] in endian_list:
+        endianness = form[0]
+        form = form[1:]
+
     try:
         if len(form) > 1:
             length_arg = int(form[1:])
-            raw = unpack(bin_file, form[:1], length_arg)
+            raw = unpack(bin_file, form[:1], length_arg, endianness=endianness)
         else:
-            raw = unpack(bin_file, form[:1])
+            raw = unpack(bin_file, form[:1], endianness=endianness)
     except:
         trace("get_raw() returned ERROR!")
         trace_error()
